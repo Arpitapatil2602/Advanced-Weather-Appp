@@ -1,0 +1,71 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Weather App (CRUD)</title>
+    <style>
+        body { font-family: Arial, sans-serif; text-align: center; }
+        .container { max-width: 600px; margin: 20px auto; }
+        input, button { padding: 10px; margin: 5px; }
+        .weather-entry { border: 1px solid #ddd; padding: 10px; margin: 10px; }
+    </style>
+</head>
+<body>
+
+    <div class="container">
+        <h2>Weather App</h2>
+        <input type="text" id="city-input" placeholder="Enter city name">
+        <button onclick="getWeather()">Get Weather</button>
+        
+        <h3>Stored Weather Data</h3>
+        <div id="weather-records"></div>
+
+        <h3>Export Data</h3>
+        <button onclick="window.open('http://localhost:5000/export/json')">Export JSON</button>
+        <button onclick="window.open('http://localhost:5000/export/csv')">Export CSV</button>
+        <button onclick="window.open('http://localhost:5000/export/pdf')">Export PDF</button>
+    </div>
+
+    <script>
+        async function getWeather() {
+            const city = document.getElementById("city-input").value;
+            if (!city) return alert("Please enter a city name!");
+
+            const response = await fetch("http://localhost:5000/weather", {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({ city })
+            });
+
+            const data = await response.json();
+            alert(`Weather for ${data.city} added!`);
+            fetchWeatherRecords();
+        }
+
+        async function fetchWeatherRecords() {
+            const response = await fetch("http://localhost:5000/weather");
+            const data = await response.json();
+            const container = document.getElementById("weather-records");
+
+            if (data.length === 0) {
+                container.innerHTML = "<p>No weather data available.</p>";
+                return;
+            }
+
+            container.innerHTML = data.map(entry => `
+                <div class="weather-entry">
+                    <h3>${entry.city}</h3>
+                    <p>Temperature: ${entry.temperature}°C</p>
+                    <p>Description: ${entry.description}</p>
+                    <p>Wind Speed: ${entry.windSpeed} km/h</p>
+                    <p>Date: ${entry.date}</p>
+                </div>
+            `).join("");
+        }
+
+        window.onload = fetchWeatherRecords;
+    </script>
+
+</body>
+</html>
